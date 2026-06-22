@@ -1,0 +1,16 @@
+[
+  {
+    "farm_id": "farm-001",
+    "name": "Predio Limarí",
+    "region": "Coquimbo",
+    "country": "Chile",
+    "crops": ["grape", "avocado"]
+  },
+  {
+    "farm_id": "farm-002",
+    "name": "Predio Elqui",
+    "region": "Coquimbo",
+    "country": "Chile",
+    "crops": ["grape"]
+  }
+]

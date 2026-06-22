@@ -1,0 +1,17 @@
+{
+  "user_id": "demo-user",
+  "domain": "apolo",
+  "profile": {
+    "selected_career": "uchile-ingcivil",
+    "known_skills": ["Python", "statistics"],
+    "target_roles": ["Data Analyst", "Data Engineer"]
+  },
+  "preferences": {
+    "locations": ["Santiago", "Valparaíso"],
+    "remote_ok": true
+  },
+  "current_context": {
+    "selected_role_family": "Data & Analytics Engineering"
+  },
+  "updated_at": "2026-01-15T12:00:00Z"
+}

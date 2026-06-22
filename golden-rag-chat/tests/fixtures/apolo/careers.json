@@ -1,0 +1,18 @@
+[
+  {
+    "career_id": "uchile-ingcivil",
+    "institution": "Universidad de Chile",
+    "name": "Ingeniería Civil",
+    "country": "Chile",
+    "region": "RM",
+    "role_families": ["Data & Analytics Engineering", "Structural Engineering", "Project Management"]
+  },
+  {
+    "career_id": "puc-ingcomercial",
+    "institution": "Pontificia Universidad Católica",
+    "name": "Ingeniería Comercial",
+    "country": "Chile",
+    "region": "RM",
+    "role_families": ["Business Analytics", "Finance", "Consulting"]
+  }
+]

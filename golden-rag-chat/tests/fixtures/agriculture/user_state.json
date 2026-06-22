@@ -1,0 +1,17 @@
+{
+  "user_id": "demo-farm-user",
+  "domain": "agriculture",
+  "profile": {
+    "farm_id": "farm-001",
+    "region": "Coquimbo",
+    "crops": ["grape", "avocado"]
+  },
+  "preferences": {
+    "risk_focus": ["frost", "fungal"]
+  },
+  "current_context": {
+    "selected_crop": "grape",
+    "recent_symptom": "leaf spots after humid week"
+  },
+  "updated_at": "2026-01-15T12:00:00Z"
+}
