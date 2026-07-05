@@ -74,16 +74,24 @@ client ──HTTP──▶ FastAPI (/chat)
                                          GoldenDataSource (read-only)
 ```
 
-- **Retrieval** (`RetrievalProvider`): `mock`, `local` (keyword over JSONL),
-  `bedrock_kb` *(skeleton)*.
-- **LLM** (`LLMProvider`): `mock`, `openrouter` *(skeleton)*, `bedrock_converse`
-  *(skeleton)*, `ollama` *(skeleton)*.
-- **RAG** (`RAGProvider`): `local_pipeline`, `bedrock_retrieve_and_generate`
-  *(skeleton)*.
-- **User state** (`UserStateProvider`): in-memory, `dynamodb`/`supabase`
-  *(skeletons)*.
+- **Retrieval** (`RetrievalProvider`): `mock` *(production_ready)*, `local`
+  *(production_ready, keyword over JSONL)*, `bedrock_kb`
+  *(adapter_offline_ready)*.
+- **LLM** (`LLMProvider`): `mock` *(production_ready)*, `openrouter`
+  *(adapter_offline_ready)*, `bedrock_converse` *(adapter_offline_ready)*,
+  `ollama` *(skeleton)*.
+- **RAG** (`RAGProvider`): `local_pipeline` *(production_ready)*,
+  `bedrock_retrieve_and_generate` *(adapter_offline_ready)*.
+- **User state** (`UserStateProvider`): in-memory *(production_ready)*,
+  `dynamodb`/`supabase` *(skeletons)*.
 - **Domains** (`DomainAdapter`): `apolo`, `agriculture` — all domain-specific
   prompt/persona/state-rendering logic lives here, not in the core.
+
+"production_ready" here means ready for local/test/demo use — it does not
+imply a hosted deployment exists. "adapter_offline_ready" means the provider
+is implemented and unit-tested against mocked responses, but has not been
+smoke-tested against the real vendor API. See
+[`docs/status.md`](docs/status.md) for the full status breakdown.
 
 More: [`docs/architecture.md`](docs/architecture.md),
 [`docs/data_contracts.md`](docs/data_contracts.md),
@@ -106,11 +114,16 @@ Cloud/heavy deps are optional extras: `uv pip install -e '.[bedrock]'` (boto3),
 
 - **M0** specs/contracts/ADRs — done.
 - **M1** mock vertical slice (`/health`, `/capabilities`, `/chat`, mock
-  providers, in-memory state) — done.
-- **M2** local JSONL keyword retrieval — done (no embeddings).
-- **M3** OpenRouter LLM — skeleton (testable payload builder).
-- **M4** Bedrock Converse / KB / RetrieveAndGenerate — skeletons.
+  providers, in-memory state) — done, production_ready for local/test/demo.
+- **M2** local JSONL keyword retrieval — done, production_ready for
+  local/test/demo (no embeddings).
+- **M3** OpenRouter LLM — adapter_offline_ready (unit-tested payload builder,
+  not smoke-tested against the real API).
+- **M4** Bedrock Converse / KB / RetrieveAndGenerate — adapter_offline_ready
+  (unit-tested against mocked boto3 clients, not smoke-tested against AWS).
 - **M5** deployment — documented, not provisioned.
+
+Current milestone and next recommended step: [`docs/status.md`](docs/status.md).
 
 ## Security
 
