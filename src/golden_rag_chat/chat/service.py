@@ -36,6 +36,8 @@ from golden_rag_chat.retrieval.base import RetrievalProvider
 from golden_rag_chat.retrieval.bedrock_kb import BedrockKnowledgeBaseRetrieval
 from golden_rag_chat.retrieval.local import LocalRetrievalProvider
 from golden_rag_chat.retrieval.mock import MockRetrievalProvider
+from golden_rag_chat.tools.apolo import ApoloToolbox
+from golden_rag_chat.tools.base import ToolRegistry
 from golden_rag_chat.user_state.base import UserState, UserStateProvider
 
 
@@ -61,6 +63,7 @@ class ProviderFactory:
         self._settings = settings
         self._domains = domains
         self._golden_data = golden_data
+        self._tools = ToolRegistry({"apolo": ApoloToolbox(golden_data)})
 
     def build_retrieval(self, name: str) -> RetrievalProvider:
         _check(name, registry=RETRIEVAL_BACKENDS, implemented=IMPLEMENTED_RETRIEVAL_BACKENDS, kind="retrieval")
@@ -106,6 +109,7 @@ class ProviderFactory:
                 domains=self._domains,
                 retrieval_backend=retrieval_backend,
                 llm_backend=llm_backend,
+                tools=self._tools,
             )
         if rag_backend == "bedrock_retrieve_and_generate":
             s = self._settings
@@ -136,6 +140,7 @@ class ChatService:
             llm_backend=options.llm_backend or s.default_llm_backend,
             rag_backend=options.rag_backend or s.default_rag_backend,
             max_sources=options.max_sources or s.default_max_sources,
+            debug=options.debug,
         )
 
     async def handle(self, request: ChatRequest) -> ChatResponse:
