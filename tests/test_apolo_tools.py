@@ -51,12 +51,12 @@ def _toolbox() -> ApoloToolbox:
                         "skills": [
                             {
                                 "skill_id": "programming",
-                                "label": "Programación",
+                                "canonical_name": "Programación",
                                 "aliases": ["programar", "scripts", "scripting"],
                             },
                             {
                                 "skill_id": "debugging",
-                                "label": "Depuración de software",
+                                "canonical_name": "Depuración de software",
                                 "aliases": ["debugging", "bugs", "arreglar bugs"],
                             },
                         ],
@@ -91,7 +91,7 @@ def _toolbox() -> ApoloToolbox:
                         "skills": [
                             {
                                 "skill_id": "programming",
-                                "label": "Programación",
+                                "canonical_name": "Programación",
                                 "aliases": ["scripts", "scripting", "programar"],
                             }
                         ],
@@ -169,4 +169,4 @@ def test_registry_exposes_exactly_three_tools_and_debug_execution():
     )
     assert execution.name == "get_labor_market"
     assert execution.arguments["region"] == "RM"
-    assert execution.result.items[0]["metrics"]["job_count"] == 438
+    assert execution.result.items[0]["metrics"]["matching_jobs"] == 438
