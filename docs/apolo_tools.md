@@ -33,7 +33,7 @@ A `career_profile` chunk should provide, when available:
   "skills": [
     {
       "skill_id": "programming",
-      "label": "Programación",
+      "canonical_name": "Programación",
       "aliases": ["programar", "scripts", "scripting"]
     }
   ]
@@ -53,10 +53,13 @@ A `job_market_summary` chunk should provide structured metrics:
 {
   "role_family": "Software Development",
   "region": "RM",
-  "job_count": 438,
-  "sample_size": 1462,
-  "data_period": "2026-Q3",
-  "top_skills": ["Programación", "Git", "SQL"]
+  "matching_jobs": 438,
+  "denominator": 1462,
+  "excluded_jobs": 138,
+  "requirements": [
+    {"canonical_name": "Python", "jobs": 210, "prevalence": 0.144}
+  ],
+  "data_period": "2026-Q3"
 }
 ```
 
