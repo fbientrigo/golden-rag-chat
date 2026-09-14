@@ -7,7 +7,7 @@ from golden_rag_chat.chat.prompt_builder import build_messages
 from golden_rag_chat.chat.source_formatter import to_wire_sources
 from golden_rag_chat.domains.base import DomainRegistry
 from golden_rag_chat.llm.base import ChatMessage, GenerationOptions, LLMProvider
-from golden_rag_chat.retrieval.base import RetrievedSource, RetrievalProvider
+from golden_rag_chat.retrieval.base import RetrievalProvider, RetrievedSource
 from golden_rag_chat.tools.base import ToolRegistry
 from golden_rag_chat.tools.loop import (
     merge_sources,
