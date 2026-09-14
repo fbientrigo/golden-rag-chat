@@ -23,6 +23,7 @@ class ChatOptions(BaseModel):
     llm_backend: str | None = None
     rag_backend: str | None = None
     max_sources: int | None = Field(default=None, ge=1, le=50)
+    debug: bool = False
 
 
 class ChatRequest(BaseModel):
@@ -57,6 +58,7 @@ class ChatResponse(BaseModel):
     answer: str
     sources: list[Source] = Field(default_factory=list)
     diagnostics: Diagnostics
+    tool_trace: list[dict[str, Any]] | None = None
 
 
 class HealthResponse(BaseModel):
