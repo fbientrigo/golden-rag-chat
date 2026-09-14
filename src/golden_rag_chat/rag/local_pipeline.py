@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import json
-
 from golden_rag_chat.api.schemas import ChatRequest, ChatResponse, Diagnostics
 from golden_rag_chat.chat.prompt_builder import build_messages
 from golden_rag_chat.chat.source_formatter import to_wire_sources
 from golden_rag_chat.domains.base import DomainRegistry
 from golden_rag_chat.llm.base import ChatMessage, GenerationOptions, LLMProvider
-from golden_rag_chat.retrieval.base import RetrievalProvider
+from golden_rag_chat.retrieval.base import RetrievedSource, RetrievalProvider
 from golden_rag_chat.tools.base import ToolRegistry
 from golden_rag_chat.tools.loop import (
     merge_sources,
@@ -45,8 +43,8 @@ class LocalRAGPipeline:
         *,
         request: ChatRequest,
         answer: str,
-        sources: list,
-        tool_trace: list[dict],
+        sources: list[RetrievedSource],
+        tool_trace: list[dict[str, object]],
         max_sources: int,
     ) -> ChatResponse:
         diagnostics = Diagnostics(
@@ -99,9 +97,9 @@ class LocalRAGPipeline:
             sources=sources,
         )
         if toolbox is not None:
-            messages.append(tool_instructions(toolbox.definitions()))
+            messages.insert(1, tool_instructions(toolbox.definitions()))
 
-        trace: list[dict] = []
+        trace: list[dict[str, object]] = []
         current_sources = list(sources)
 
         for _ in range(MAX_TOOL_ROUNDS + 1):
