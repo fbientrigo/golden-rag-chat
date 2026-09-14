@@ -84,8 +84,8 @@ def _toolbox() -> ApoloToolbox:
                     {
                         "role_family": "Software Development",
                         "region": "RM",
-                        "job_count": 438,
-                        "sample_size": 1462,
+                        "matching_jobs": 438,
+                        "denominator": 1462,
                         "data_period": "2026-Q3",
                         "top_skills": ["Programación", "Git", "SQL"],
                         "skills": [
@@ -138,8 +138,8 @@ def test_skill_alignment_matches_canonical_aliases_from_conversation():
 def test_labor_market_returns_only_structured_counts():
     result = _toolbox().get_labor_market(role_family="Software Development", region="RM")
 
-    assert result.items[0]["metrics"]["job_count"] == 438
-    assert result.items[0]["metrics"]["sample_size"] == 1462
+    assert result.items[0]["metrics"]["matching_jobs"] == 438
+    assert result.items[0]["metrics"]["denominator"] == 1462
     assert "9999" not in str(result.items[0]["metrics"])
     assert result.warnings == []
 
