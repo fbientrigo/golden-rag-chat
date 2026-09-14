@@ -1,19 +1,25 @@
-"""Local composed RAG pipeline: retrieve -> prompt -> generate -> cite.
-
-This is the reference ``RAGProvider``. It is intentionally provider-agnostic: it
-holds *a* retrieval provider and *an* LLM provider, whatever they are. The
-mock/local/Bedrock distinction is decided by the factory, not here.
-"""
+"""Local composed RAG pipeline: retrieve -> converse/tool -> generate -> cite."""
 
 from __future__ import annotations
+
+import json
 
 from golden_rag_chat.api.schemas import ChatRequest, ChatResponse, Diagnostics
 from golden_rag_chat.chat.prompt_builder import build_messages
 from golden_rag_chat.chat.source_formatter import to_wire_sources
 from golden_rag_chat.domains.base import DomainRegistry
-from golden_rag_chat.llm.base import GenerationOptions, LLMProvider
+from golden_rag_chat.llm.base import ChatMessage, GenerationOptions, LLMProvider
 from golden_rag_chat.retrieval.base import RetrievalProvider
+from golden_rag_chat.tools.base import ToolRegistry
+from golden_rag_chat.tools.loop import (
+    merge_sources,
+    parse_tool_call,
+    tool_instructions,
+    tool_result_message,
+)
 from golden_rag_chat.user_state.base import UserState
+
+MAX_TOOL_ROUNDS = 3
 
 
 class LocalRAGPipeline:
@@ -25,15 +31,44 @@ class LocalRAGPipeline:
         domains: DomainRegistry,
         retrieval_backend: str,
         llm_backend: str,
+        tools: ToolRegistry | None = None,
     ):
         self._retrieval = retrieval
         self._llm = llm
         self._domains = domains
-        # Recorded for diagnostics only; the pipeline does not branch on them.
+        self._tools = tools or ToolRegistry()
         self._retrieval_backend = retrieval_backend
         self._llm_backend = llm_backend
 
-    async def answer(self, *, request: ChatRequest, user_state: UserState | None) -> ChatResponse:
+    def _response(
+        self,
+        *,
+        request: ChatRequest,
+        answer: str,
+        sources: list,
+        tool_trace: list[dict],
+        max_sources: int,
+    ) -> ChatResponse:
+        diagnostics = Diagnostics(
+            domain=request.domain.value,
+            retrieval_backend=self._retrieval_backend,
+            llm_backend=self._llm_backend,
+            rag_backend="local_pipeline",
+            num_sources=len(sources),
+        )
+        return ChatResponse(
+            answer=answer,
+            sources=to_wire_sources(sources, max_sources=max_sources),
+            diagnostics=diagnostics,
+            tool_trace=tool_trace if request.options.debug else None,
+        )
+
+    async def answer(
+        self,
+        *,
+        request: ChatRequest,
+        user_state: UserState | None,
+    ) -> ChatResponse:
         domain = self._domains.require(request.domain.value)
         max_sources = request.options.max_sources or 5
 
@@ -44,22 +79,16 @@ class LocalRAGPipeline:
             context=request.context,
             max_sources=max_sources,
         )
+        toolbox = self._tools.get(request.domain.value)
 
-        diagnostics = Diagnostics(
-            domain=request.domain.value,
-            retrieval_backend=self._retrieval_backend,
-            llm_backend=self._llm_backend,
-            rag_backend="local_pipeline",
-            num_sources=len(sources),
-        )
-
-        # Safety rule: with no evidence, return the domain's insufficiency message
-        # rather than calling the model and risking a fabricated answer.
-        if not sources:
-            return ChatResponse(
+        # Domains without internal tools preserve the original fail-closed behavior.
+        if not sources and toolbox is None:
+            return self._response(
+                request=request,
                 answer=domain.insufficient_evidence_message(),
                 sources=[],
-                diagnostics=diagnostics,
+                tool_trace=[],
+                max_sources=max_sources,
             )
 
         messages = build_messages(
@@ -69,14 +98,59 @@ class LocalRAGPipeline:
             context=request.context,
             sources=sources,
         )
-        llm_response = await self._llm.generate(
-            messages=messages,
-            sources=sources,
-            options=GenerationOptions(max_tokens=1024),
-        )
+        if toolbox is not None:
+            messages.append(tool_instructions(toolbox.definitions()))
 
-        return ChatResponse(
-            answer=llm_response.text,
-            sources=to_wire_sources(sources, max_sources=max_sources),
-            diagnostics=diagnostics,
-        )
+        trace: list[dict] = []
+        current_sources = list(sources)
+
+        for _ in range(MAX_TOOL_ROUNDS + 1):
+            llm_response = await self._llm.generate(
+                messages=messages,
+                sources=current_sources,
+                options=GenerationOptions(max_tokens=1024),
+            )
+            call = parse_tool_call(llm_response.text)
+
+            if call is None or toolbox is None:
+                return self._response(
+                    request=request,
+                    answer=llm_response.text,
+                    sources=current_sources,
+                    tool_trace=trace,
+                    max_sources=max_sources,
+                )
+
+            if len(trace) >= MAX_TOOL_ROUNDS:
+                return self._response(
+                    request=request,
+                    answer=(
+                        "I couldn't complete the data lookup safely in this turn. "
+                        "Please refine the question and try again."
+                    ),
+                    sources=current_sources,
+                    tool_trace=trace,
+                    max_sources=max_sources,
+                )
+
+            messages.append(ChatMessage(role="assistant", content=llm_response.text))
+            try:
+                execution = toolbox.execute(call.name, call.arguments)
+            except (TypeError, ValueError):
+                messages.append(
+                    ChatMessage(
+                        role="user",
+                        content=(
+                            "INTERNAL TOOL ERROR: the requested tool name or arguments were invalid. "
+                            "Choose one available tool with valid arguments, or answer/ask a follow-up "
+                            "without guessing."
+                        ),
+                    )
+                )
+                continue
+
+            trace.append(execution.model_dump(mode="json"))
+            current_sources = merge_sources(current_sources, execution)
+            messages.append(tool_result_message(execution=execution, sources=current_sources))
+
+        raise RuntimeError("unreachable tool-loop state")
