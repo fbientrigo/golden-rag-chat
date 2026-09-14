@@ -84,9 +84,9 @@ def _string_list(value: Any) -> list[str]:
     if isinstance(value, str):
         return [value]
     if isinstance(value, Mapping):
-        return [str(v) for v in value.values() if isinstance(v, (str, int, float))]
+        return [str(v) for v in value.values() if isinstance(v, str | int | float)]
     if isinstance(value, Iterable):
-        return [str(v) for v in value if isinstance(v, (str, int, float))]
+        return [str(v) for v in value if isinstance(v, str | int | float)]
     return []
 
 
@@ -120,7 +120,7 @@ def _structured_skill_records(chunk: GoldenChunk) -> list[dict[str, Any]]:
     if raw_skills is None:
         return []
 
-    if isinstance(raw_skills, (str, Mapping)):
+    if isinstance(raw_skills, str | Mapping):
         raw_skills = [raw_skills]
     if not isinstance(raw_skills, Iterable):
         return []
@@ -449,7 +449,7 @@ class ApoloToolbox:
             md = chunk.metadata
             metrics = {key: md[key] for key in metric_keys if key in md}
             count = metrics.get(\n                "job_count", metrics.get("posting_count", metrics.get("matching_jobs"))\n            )
-            if isinstance(count, (int, float)) and not isinstance(count, bool):
+            if isinstance(count, int | float) and not isinstance(count, bool):
                 has_count = True
 
             items.append(
