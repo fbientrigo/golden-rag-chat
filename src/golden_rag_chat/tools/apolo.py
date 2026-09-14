@@ -132,7 +132,7 @@ def _structured_skill_records(chunk: GoldenChunk) -> list[dict[str, Any]]:
             skill_id = _normalize(raw).replace(" ", "_")
             aliases = _string_list(aliases_map.get(raw))
         elif isinstance(raw, Mapping):
-            label = str(raw.get("label") or raw.get("name") or raw.get("skill") or "").strip()
+            label = str(\n                raw.get("canonical_name")\n                or raw.get("label")\n                or raw.get("name")\n                or raw.get("skill")\n                or ""\n            ).strip()
             if not label:
                 continue
             skill_id = str(raw.get("skill_id") or raw.get("id") or _normalize(label).replace(" ", "_"))
@@ -428,8 +428,12 @@ class ApoloToolbox:
         metric_keys = (
             "job_count",
             "posting_count",
+            "matching_jobs",
+            "denominator",
+            "excluded_jobs",
             "sample_size",
             "data_period",
+            "requirements",
             "top_skills",
             "regions",
             "sectors",
@@ -444,7 +448,7 @@ class ApoloToolbox:
         for chunk in selected:
             md = chunk.metadata
             metrics = {key: md[key] for key in metric_keys if key in md}
-            count = metrics.get("job_count", metrics.get("posting_count"))
+            count = metrics.get(\n                "job_count", metrics.get("posting_count", metrics.get("matching_jobs"))\n            )
             if isinstance(count, (int, float)) and not isinstance(count, bool):
                 has_count = True
 
