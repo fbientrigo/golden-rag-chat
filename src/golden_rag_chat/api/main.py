@@ -50,7 +50,12 @@ def create_app() -> FastAPI:
             rag_backends=list(RAG_BACKENDS),
         )
 
-    @app.post("/chat", response_model=ChatResponse, tags=["chat"])
+    @app.post(
+        "/chat",
+        response_model=ChatResponse,
+        response_model_exclude_none=True,
+        tags=["chat"],
+    )
     async def chat(
         request: ChatRequest,
         service: Annotated[ChatService, Depends(get_chat_service)],

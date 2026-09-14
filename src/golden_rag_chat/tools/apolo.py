@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Iterable, Mapping
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -162,6 +162,7 @@ class ToolEvidence(BaseModel):
     source_type: str
     title: str
     uri: str
+    excerpt: str = ""
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -305,6 +306,7 @@ class ApoloToolbox:
                     source_type=chunk.source_type,
                     title=chunk.title,
                     uri=chunk.uri,
+                    excerpt=chunk.text,
                     metadata=dict(md),
                 )
             )
@@ -388,6 +390,7 @@ class ApoloToolbox:
                     source_type=chunk.source_type,
                     title=chunk.title,
                     uri=chunk.uri,
+                    excerpt=chunk.text,
                     metadata=dict(chunk.metadata),
                 )
             )
@@ -476,6 +479,7 @@ class ApoloToolbox:
                     source_type=chunk.source_type,
                     title=chunk.title,
                     uri=chunk.uri,
+                    excerpt=chunk.text,
                     metadata=dict(md),
                 )
             )
@@ -493,17 +497,13 @@ class ApoloToolbox:
             warnings=warnings,
         )
 
-    def execute(self, name: Literal[
-        "search_programs",
-        "get_skill_alignment",
-        "get_labor_market",
-    ], arguments: dict[str, Any]) -> ToolExecution:
+    def execute(self, name: str, arguments: dict[str, Any]) -> ToolExecution:
         if name == "search_programs":
             result = self.search_programs(**arguments)
         elif name == "get_skill_alignment":
             result = self.get_skill_alignment(**arguments)
         elif name == "get_labor_market":
             result = self.get_labor_market(**arguments)
-        else:  # pragma: no cover - Literal prevents normal callers reaching this
+        else:
             raise ValueError(f"unknown APOLO tool: {name}")
         return ToolExecution(name=name, arguments=dict(arguments), result=result)
