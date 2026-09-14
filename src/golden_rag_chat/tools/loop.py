@@ -28,7 +28,7 @@ def tool_instructions(definitions: list[dict[str, Any]]) -> ChatMessage:
     return ChatMessage(
         role="system",
         content=(
-            "INTERNAL TOOLS are available for grounded APOLO queries. "
+            "INTERNAL TOOLS are available for grounded data queries. "
             "For exploratory conversation or when you need more information from the user, "
             "reply normally and ask a concise follow-up question. "
             "When you need one tool, reply ONLY with valid JSON in this exact envelope: "
